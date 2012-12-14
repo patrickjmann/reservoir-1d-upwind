@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# This "configure" simply runs cmake with suitable
+# initial parameters.
+#
+# The idea is do the "build" somewhere else completely.
+
+export PATH="/bin:/usr/bin:/usr/local/bin"
+
+NAME="reservoir/upwind1"
+SRC_DIR="$PWD"
+BUILD_DIR="$HOME/build/$NAME"
+
+CXX="g++"
+
+echo "configure:  Initial CMake for $NAME"
+echo "   cd's to $BUILD_DIR and then runs a suitable cmake."
+echo "   The default compiler is $CXX.  If necessary this can be changed with"
+echo "        \"-D CXX_STRING=\"icpc\" for instance."
+
+if ! test -d $BUILD_DIR
+then
+  echo "  \"$BUILD_DIR\" does not exist: creating it."
+  mkdir -p $BUILD_DIR
+else
+  echo "  \"$BUILD_DIR\" exists.  It will be deleted and re-created."
+  rm -rf $BUILD_DIR
+  mkdir $BUILD_DIR
+fi
+
+cd $BUILD_DIR
+cmake -D CXX:STRING=$CXX $SRC_DIR

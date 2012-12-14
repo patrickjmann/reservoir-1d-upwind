@@ -1,0 +1,20 @@
+LINK_DIRECTORIES(
+   ${BINARY_DIR}/io
+   ${BINARY_DIR}/evolve
+   ${BASE_DIR}/lib
+)
+
+SET( main_SOURCE main.C )
+ADD_EXECUTABLE(${PROJECT_NAME} ${main_SOURCE})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} evolve io putil physics)
+
+IF( ${CXX} STREQUAL "icpc" )
+  SET_TARGET_PROPERTIES( ${PROJECT_NAME}
+    PROPERTIES LINK_FLAGS "-cxxlib-icc"
+  )
+ENDIF( ${CXX} STREQUAL "icpc" )
+
+ADD_CUSTOM_TARGET( main_RCS
+  COMMAND ci -l ${main_SOURCE} CMakeLists.txt
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
