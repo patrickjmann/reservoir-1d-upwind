@@ -1,4 +1,4 @@
-//######################################################################
+//##############################################################################
 /**\file Boundary.C
 
 $Source: /home/mann/Dropbox/research/1/ReservoirSimulation/1d/upwind1/evolve/RCS/Boundary.C,v $
@@ -9,7 +9,7 @@ $Date: 2012/11/23 22:54:08 $
 
 Compute fluxes on boundary nodes
 */
-//######################################################################
+//##############################################################################
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -23,7 +23,7 @@ Compute fluxes on boundary nodes
 
 using namespace std;
 
-//======================================================================
+//==============================================================================
 /** A utility function where I can put all the actual boundary
 flux calculations, but still call it up for the old (predictor)
 time slice and the new (corrector) time slice.
@@ -41,11 +41,8 @@ void Node::MakeFluxBoundary( CommandLineOptions& cloption,
           BoundaryCondition& bdy_cond, TimeData& ptime, int sign,
           Flux& flux )
 {
-  // Use the high-resolution fitting approach
-  // -----------------------
-  // BaseVariables is actually used for the Element class
-  // (current and old) but it's handy to use it here even
-  // though other element-specific members are unused.
+  // Identify the inside element and sign for a generic calculation of
+  // of the boundary conditions (left or right).
   
   Element* inside;
   double usign;
@@ -59,9 +56,13 @@ void Node::MakeFluxBoundary( CommandLineOptions& cloption,
     usign = -1.0;
     rho_bdy = bdy_cond.RhoRight( ptime.Coord() );
   } else {  // not a boundary node!
-    cerr << "Node::MakeFluxBoundary: ERROR: this is not a boundary element!\n";
+    cerr << "Node::MakeFluxBoundary: ERROR: this is not a boundary node!\n";
     exit(1);
   }
+  
+  // Calculate the highres values from the inside node
+  // BaseVariables is used in Element but is handy to use here although
+  // various element-specific members are unused.
 
   BaseVariables highres_inside;
   
@@ -75,20 +76,19 @@ void Node::MakeFluxBoundary( CommandLineOptions& cloption,
     exit( 1 );
   }
 
-  //====================================================================
-  // Simple u-based Upwind.
-  /*
+  //============================================================================
+  /* Now calculate the boundary conditions.
    * Velocity will be just interpolated from within as usual.  This
-   * just means using the highres_right value.  It is NOT being advected
+   * just means using the highres_inside value.  It is NOT being advected
    * so I think this is reasonable.  Just using Darcy's law which is
    * a constraint equation.
    * 
-   * Density should be given at the boundary.  May be more "physical" to
-   * give pressure and then calculate density.  For this test give
-   * density
+   * Density should be given at the boundary if the velocity is inward.
+   * May be more "physical" to give pressure and then calculate density.
+   * For this test give density.
    * 
-   * If outgoing (v<0) then just use the upwinded values from the
-   * adjacent node as usual.
+   * If outgoing then just use the upwinded high-res values from the
+   * inside element as usual.
    * */
 
   double u, rho;

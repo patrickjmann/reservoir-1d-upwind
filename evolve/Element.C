@@ -1,4 +1,4 @@
-//#############################################################################
+//##############################################################################
 /**\file Element.C
 
 $Source: /home/mann/Dropbox/research/1/ReservoirSimulation/1d/upwind1/evolve/RCS/Element.C,v $ 
@@ -9,7 +9,7 @@ $Date: 2012/11/25 00:39:23 $
 
 Element class
 */
-//#############################################################################
+//##############################################################################
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -24,7 +24,7 @@ using namespace std;
 
 extern Fluid fluid;
 
-//=============================================================================
+//==============================================================================
 Element::Element()
 {
   cur.ZeroAll();
@@ -34,14 +34,14 @@ Element::Element()
 
   id = -1;
 }
-//=============================================================================
+//==============================================================================
 /// Very handy for testing the high-resolution methods.
 
 void Element::ZeroCurrentSigma()
 {
   cur.ZeroSigma();
 }
-//=============================================================================
+//==============================================================================
 /** load the primitive variables
 
 Generally used for the initial data.
@@ -54,7 +54,7 @@ void Element::Make( const double u_in, const double rho_in )
   cur.u   = u_in;
   cur.rho = rho_in;
 }
-//======================================================================
+//==============================================================================
 void Element::MakePFromRho()
 {
   cur.p = fluid.p( cur.rho );
@@ -63,7 +63,7 @@ void Element::MakeRhoFromP()
 {
   cur.rho = fluid.rho( cur.p );
 }
-//======================================================================
+//==============================================================================
 /// Darcy's equations used to compute U from P
 
 void Element::MakeUFromDarcy()
@@ -72,14 +72,14 @@ void Element::MakeUFromDarcy()
   Element* eleft = left->left;
   Element* eright = right->right;
   if( eleft == 0 ){
-      cur.u = ctmp * (eright->cur.p - cur.p)/(eright->x - x);
+    cur.u = ctmp * (eright->cur.p - cur.p)/(eright->x - x);
   } else if ( eright == 0 ){
-      cur.u = ctmp * (cur.p - eleft->cur.p)/(x - eleft->x);
+    cur.u = ctmp * (cur.p - eleft->cur.p)/(x - eleft->x);
   } else {
     cur.u = ctmp * (eright->cur.p - eleft->cur.p)/(eright->x - eleft->x);
   }
 }
-//======================================================================
+//==============================================================================
 /** Make the fluid quantities rho, phi and p from W
  * See the documentation for the derivation of the equations.
 */
@@ -89,9 +89,9 @@ void Element::MakeFluidFromW()
   const double tmp1 = fluid.c_f/rock.c_r - 1.0;
   const double D = tmp1*tmp1 + 4.0*c;
   if( D < 0.0 ){
-      cerr << "Element::MakeFluidFromW: ERROR: discriminant < 0\n"
-           << "  D = " << D << '\n';
-      exit(1);
+    cerr << "Element::MakeFluidFromW: ERROR: discriminant < 0\n"
+         << "  D = " << D << '\n';
+    exit(1);
   }
   cur.rho = fluid.rho_r * 0.5 * ( -tmp1 + sqrt(D) );
   
@@ -100,7 +100,7 @@ void Element::MakeFluidFromW()
   cur.phi = cur.W / cur.rho;
   cur.p = fluid.p( cur.rho ); 
 }
-//======================================================================
+//==============================================================================
 // Loops for various Make routines
 
 void ElementList::MakeW()
@@ -109,35 +109,37 @@ void ElementList::MakeW()
     e[ie].MakeW();
   }
 }
-//======================================================================
+//==============================================================================
 void ElementList::MakeUFromDarcy()
 {
   for( int ie=0; ie<n; ++ie ){
     e[ie].MakeUFromDarcy();
   }
 }
-//======================================================================
+//==============================================================================
 void ElementList::MakeRhoFromP()
 {
   for( int ie=0; ie<n; ++ie ){
     e[ie].MakeRhoFromP();
   }
 }
-//======================================================================
+//==============================================================================
 void ElementList::SetPhi()
 {
   for( int ie=0; ie<n; ++ie ){
     e[ie].SetPhi();
   }
 }
-//======================================================================
-void ElementList::MakeFluidFromW(){
+//==============================================================================
+void ElementList::MakeFluidFromW()
+{
   for( int i=0; i<n; ++i ){
     e[i].MakeFluidFromW();
   }
 }
-//======================================================================
-void ElementList::MakeSigma( CommandLineOptions& cloption ){
+//==============================================================================
+void ElementList::MakeSigma( CommandLineOptions& cloption )
+{
   for( int i=0; i<n; ++i ){
     e[i].MakeSigma( cloption );
   }
@@ -152,7 +154,7 @@ void ElementList::Make( const int n_elements )
   n = n_elements;
   e = new Element[n];
 }
-//=============================================================================
+//==============================================================================
 /** Make the slopes of the basic variables.
 These are used for the high-resolution approach to the advection terms.
 */
@@ -172,7 +174,7 @@ void Element::MakeSigma( CommandLineOptions& cloption )
     }
   //## ZeroCurrentSigma();
 }
-//-----------------------------------------------------------------
+//------------------------------------------------------------------------------
 void Element::MakeSigmaMC()
 {
   Element* eleft = left->left;
@@ -228,7 +230,7 @@ void Element::MakeSigmaMC()
   cur.sigma_phi = dphi_mag * signum(dphi_mid);
   if( dphi_left*dphi_right <= 0.0 ) cur.sigma_phi = 0.0;
 }
-//-----------------------------------------------------------------
+//------------------------------------------------------------------------------
 void Element::MakeSigmaMinMod()
 {
   Element* eleft = left->left;

@@ -1,4 +1,4 @@
-//######################################################################
+//##############################################################################
 /**\file Flux.C
 
 $Source: /home/mann/Dropbox/research/1/ReservoirSimulation/1d/upwind1/evolve/RCS/Flux.C,v $
@@ -10,7 +10,7 @@ $Date: 2012/11/25 00:39:23 $
 Compute fluxes on nodes (interface between elements) and
 add to adjacent elements.
 */
-//######################################################################
+//##############################################################################
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -23,7 +23,7 @@ add to adjacent elements.
 
 using namespace std;
 
-//======================================================================
+//==============================================================================
 void NodeList::MakeFluxPredictor( CommandLineOptions& cloption, TimeData& ptime,
 				  ArtVisControl& artvis, BoundaryCondition& bdy_cond )
 {
@@ -34,7 +34,7 @@ void NodeList::MakeFluxPredictor( CommandLineOptions& cloption, TimeData& ptime,
   node[0].MakeFluxBoundary( cloption, bdy_cond, ptime, sign, node[0].oldflux );
   node[n-1].MakeFluxBoundary( cloption, bdy_cond, ptime, sign, node[n-1].oldflux );
 }
-//======================================================================
+//==============================================================================
 /** Make the flux on each node for the corrector steps
  * \param[in] cloption Various options
  * \param[in] ptime time step data
@@ -50,7 +50,7 @@ void NodeList::MakeFluxCorrector( CommandLineOptions& cloption, TimeData& ptime,
   node[0].MakeFluxBoundary( cloption, bdy_cond, ptime, sign, node[0].flux );
   node[n-1].MakeFluxBoundary( cloption, bdy_cond, ptime, sign, node[n-1].flux );
 }
-//======================================================================
+//==============================================================================
 /** A utility function where I can put all the actual
 flux calculations, but still call it up for the old (predictor)
 time slice and the new (corrector) time slice.
@@ -72,15 +72,13 @@ void Node::MakeFlux( CommandLineOptions& cloption,
           TimeData& ptime, ArtVisControl& artvis, int sign,
           Flux& flux )
 {
-  //const double deltat = ptime.Delta();
+  //$$const double deltat = ptime.Delta();
 
   // Averages are used for various tests and upwind fallbacks,
   // so compute them all here. 
 
   const double u = 0.5 * ( left.u + right.u );
   //const double rho = 0.5 * ( left.rho + right.rho );
-
-  const double du = right.u - left.u;
 
   // HIGH RESOLUTION FITTING
   // -----------------------
@@ -91,7 +89,7 @@ void Node::MakeFlux( CommandLineOptions& cloption,
   BaseVariables highres_left, highres_right;
   MakeHighRes( cloption.reconstruction_type, highres_left, highres_right );
 
-  //====================================================================
+  //============================================================================
   // Simple u-based Upwind.
 
   double u_up, rho_up;
@@ -105,6 +103,7 @@ void Node::MakeFlux( CommandLineOptions& cloption,
 
   // Artificial viscosity.  Necessary if straight upwind is used.
 
+  const double du = right.u - left.u;
   if( du < 0.0 ){
     const double absdu = fabs(du);
     //q =  rho_up * absdu * ( artvis.k1*cs + artvis.k2*absdu );
@@ -116,7 +115,7 @@ void Node::MakeFlux( CommandLineOptions& cloption,
   flux.Make( rho_up, u_up );
   return;
 }
-//======================================================================
+//==============================================================================
 /** Compute flux for predictor.  Just a wrapper which calls the
  * generic MakeFlux function.
  * Note: should probably be moved into the "Flux" or "BasicVariable" 
@@ -139,7 +138,7 @@ void Node::MakeFluxPredictor( CommandLineOptions& cloption, TimeData& ptime, Art
   MakeFlux( cloption, left->old, right->old, left->x, right->x,
 	    ptime, artvis, sign, oldflux );
 }
-//======================================================================
+//==============================================================================
 /** Compute flux corrector.  Just a wrapper which calls the generic
  * MakeFlux function.
  * 
