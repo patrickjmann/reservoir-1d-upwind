@@ -81,8 +81,8 @@ void ElementList::Correct( CommandLineOptions& cloption, TimeData& ptime )
 
 Generally a simple 1-st order forward differencing
 
-\param cloption options and parameters
-\param ptime time step data
+\param[in] cloption options and parameters
+\param[in] ptime time step data
 */
 void Element::EvolveSimplePredictor( CommandLineOptions& cloption, TimeData& ptime )
 {
@@ -95,8 +95,8 @@ void Element::EvolveSimplePredictor( CommandLineOptions& cloption, TimeData& pti
 Note that all the time-averaging for the corrector is built-in to
 the Node::flux members.
 
-\param cloption options and parameters
-\param ptime time step data
+\param[in] cloption options and parameters
+\param[in] ptime time step data
 */
 void Element::EvolveSimpleCorrector( CommandLineOptions& cloption, TimeData& ptime )
 {
