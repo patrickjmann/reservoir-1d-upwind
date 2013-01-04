@@ -29,6 +29,7 @@ extern logstream plog;
 
 //=============================================================================
 /** Make initial data
+\param[in] cloption Options
  */
 void Grid::MakeInitial( CommandLineOptions& cloption )
 {
@@ -47,11 +48,14 @@ void Grid::MakeInitial( CommandLineOptions& cloption )
                 
   elist.Exchange();
 }
-//=============================================================================
+//======================================================================
 /** Make the grid geometry and positions.
-    
-A simple constant spaced grid.  Elements contain pointers to the nodes
-and nodes contain pointers to left/right elements.
+ * A simple constant spaced grid.  Elements contain pointers to
+ * the nodes and nodes contain pointers to left/right elements.
+
+\param[in] n_elements The number of elements
+\param[in] x_left  Left position (meters)
+\param[in] x_right Right position (meters)
 */
 
 int Grid::MakeGeometry( int n_elements, double x_left, double x_right )
@@ -120,10 +124,9 @@ int Grid::MakeGeometry( int n_elements, double x_left, double x_right )
 }
 //=============================================================================
 /** Make initial data for the tube.
-
-This is a single call which does everything.
-* 
-* Default is just Loose Sand and Oil
+ * This is a single call which does everything.
+ *  
+ * Default is just Loose Sand and Oil
 */
 int Grid::MakeTube( CommandLineOptions& cloption )
 {
@@ -160,7 +163,8 @@ int Grid::MakeTube( CommandLineOptions& cloption )
   }
   ifstream s_in( param_file.c_str() );
   if ( ! s_in ){
-    cerr << "Grid::MakeTube: WARNING: there is no data file \"" << param_file << "\" so default values are used\n";
+    cerr << "Grid::MakeTube: WARNING: there is no data file \""
+         << param_file << "\" so default values are used\n";
   } else {
     param.Get( s_in );
     s_in.close();
@@ -170,7 +174,8 @@ int Grid::MakeTube( CommandLineOptions& cloption )
 
   int ierr = MakeGeometry( cloption.n_elements, x_left, x_right );
   if( ierr != 0 ){
-    cerr << "Grid::MakeTube: ERROR: MakeGeometry returns " << ierr << '\n';
+    cerr << "Grid::MakeTube: ERROR: MakeGeometry returns "
+         << ierr << '\n';
     exit(1);
   }
 
@@ -193,7 +198,7 @@ int Grid::MakeTube( CommandLineOptions& cloption )
   
   return 0;
 }
-//=============================================================================
+//======================================================================
 /** Make Reservoir Tube initial data.
 
 Note that only the elements have data.  The nodes compute data as
@@ -201,7 +206,8 @@ required from the adjoining elements.
 * 
 * Note that generally the pressure p is given.
 */
-int Grid::MakeTube( CommandLineOptions& cloption, double x_left, double x_right,
+int Grid::MakeTube( CommandLineOptions& cloption,
+        double x_left, double x_right,
 		    double p_left, double p_right )
 {
   // should check parameters
@@ -227,13 +233,12 @@ int Grid::MakeTube( CommandLineOptions& cloption, double x_left, double x_right,
    * So nothing to do here.
    * */
   
-  // Make p on each node.  Just a linear fit for now.
+  // Make p on each node.  Just a linear ramp for now.
   
-  const double slope = (p_right - p_left)/(x_right - x_left);
-  for( int ie=0; ie<elist.n; ++ie ){
-    const double x = elist.e[ie].x;
-    elist.e[ie].cur.p = p_left + slope * ( x - x_left ); 
-  }
+  //$$MakeTubeRamp( x_left, x_right, p_left, p_right );
+  
+  double p_mid = MAX( p_left, p_right );
+  MakeTubePHat( x_left, x_right, p_mid );
   
   /* Make the rest of the element variables.
    * Order is important in the below.
@@ -245,3 +250,42 @@ int Grid::MakeTube( CommandLineOptions& cloption, double x_left, double x_right,
 
   return 0;
 }    
+//======================================================================
+int Grid::MakeTubeRamp( double x_left, double x_right,
+                         double p_left, double p_right )
+{
+  const double slope = (p_right - p_left)/(x_right - x_left);
+  for( int ie=0; ie<elist.n; ++ie ){
+    const double x = elist.e[ie].x;
+    elist.e[ie].cur.p = p_left + slope * ( x - x_left ); 
+  }
+}
+//======================================================================
+/** Make a smoothed hat function for the initial pressure.
+
+This has the advantage of giving zero pressure on the boundaries
+and hopefully allowing simple p=0 boundary conditions.
+*/
+int Grid::MakeTubePHat( double x_left, double x_right, double p_mid )
+{
+  double x_mid = 0.5 * ( x_left + x_right );
+  double dx_left = x_mid - x_left;
+  double dx_right = x_right - x_mid;
+  for( int ie=0; ie<elist.n; ++ie ){
+    double x = elist.e[ie].x;
+    BaseVariables& cur = &(elist.e[ie].cur);
+    double p;
+    if( x < x_mid ){
+      p = p_mid * (x - x_left)/dx_left;
+    } else {
+      p = p_mid * (x_right - x)/dx_right;
+      elist.e[ie].cur.p = p;
+    }
+  }
+  
+  // Now smooth it out
+  
+  for( int ie=1; ie<(elist.n-1); ++ie ){
+    elist.e[ie].cur.p = 0.25 * ( elist.e[ie-1].cur.p + 2.0*elist.e[ie].cur.p + elist.e[ie+1].cur.p );
+  }
+}
